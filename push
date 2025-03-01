@@ -1,28 +1,46 @@
--- FE Body Push Script
--- Makes your character push others by applying a force when you collide with them.
+-- FE Push Script: Automatically pushes another player with force
 
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 local pushForce = 100  -- Adjust the push strength
+local pushCooldown = 2  -- Time between pushes (in seconds)
 
-local function onTouch(otherPart)
-    local otherChar = otherPart.Parent
-    if otherChar and otherChar:IsA("Model") and otherChar ~= character then
-        local otherHumanoidRootPart = otherChar:FindFirstChild("HumanoidRootPart")
+-- Function to apply a force to another player
+local function pushOtherPlayer(targetPlayer)
+    local targetCharacter = targetPlayer.Character
+    if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+        local targetHumanoidRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+        local direction = (targetHumanoidRootPart.Position - humanoidRootPart.Position).unit
+        local bodyVelocity = Instance.new("BodyVelocity")
         
-        if otherHumanoidRootPart then
-            local direction = (otherHumanoidRootPart.Position - humanoidRootPart.Position).unit
-            local bodyVelocity = Instance.new("BodyVelocity")
-            
-            bodyVelocity.Velocity = direction * pushForce
-            bodyVelocity.MaxForce = Vector3.new(100000, 0, 100000)  -- Strong force, but prevents flying
-            bodyVelocity.Parent = otherHumanoidRootPart
-            
-            game:GetService("Debris"):AddItem(bodyVelocity, 0.2) -- Remove force after 0.2 seconds
-        end
+        bodyVelocity.Velocity = direction * pushForce
+        bodyVelocity.MaxForce = Vector3.new(100000, 0, 100000)  -- Strong force, but prevents flying
+        bodyVelocity.Parent = targetHumanoidRootPart
+        
+        -- Remove the force after 0.2 seconds
+        game:GetService("Debris"):AddItem(bodyVelocity, 0.2)
     end
 end
 
-humanoidRootPart.Touched:Connect(onTouch)
+-- Function to choose a random player to push
+local function chooseRandomPlayer()
+    local otherPlayers = {}
+    for _, otherPlayer in ipairs(game.Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character then
+            table.insert(otherPlayers, otherPlayer)
+        end
+    end
+
+    if #otherPlayers > 0 then
+        local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
+        pushOtherPlayer(randomPlayer)
+    end
+end
+
+-- Continuously push a random player every few seconds
+while true do
+    chooseRandomPlayer()
+    wait(pushCooldown)  -- Wait for the cooldown before pushing again
+end
