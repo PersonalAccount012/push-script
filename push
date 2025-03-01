@@ -1,0 +1,28 @@
+-- FE Body Push Script
+-- Makes your character push others by applying a force when you collide with them.
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local pushForce = 100  -- Adjust the push strength
+
+local function onTouch(otherPart)
+    local otherChar = otherPart.Parent
+    if otherChar and otherChar:IsA("Model") and otherChar ~= character then
+        local otherHumanoidRootPart = otherChar:FindFirstChild("HumanoidRootPart")
+        
+        if otherHumanoidRootPart then
+            local direction = (otherHumanoidRootPart.Position - humanoidRootPart.Position).unit
+            local bodyVelocity = Instance.new("BodyVelocity")
+            
+            bodyVelocity.Velocity = direction * pushForce
+            bodyVelocity.MaxForce = Vector3.new(100000, 0, 100000)  -- Strong force, but prevents flying
+            bodyVelocity.Parent = otherHumanoidRootPart
+            
+            game:GetService("Debris"):AddItem(bodyVelocity, 0.2) -- Remove force after 0.2 seconds
+        end
+    end
+end
+
+humanoidRootPart.Touched:Connect(onTouch)
