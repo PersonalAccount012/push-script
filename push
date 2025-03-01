@@ -1,6 +1,5 @@
 -- Script to be placed in a LocalScript (GUI) in StarterGui or similar
 local Player = game.Players.LocalPlayer
-local Mouse = Player:GetMouse()
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = Player.PlayerGui
 
@@ -40,4 +39,9 @@ local function createPlayerButtons()
             -- Add click event to each button
             Button.MouseButton1Click:Connect(function()
                 -- Push the selected player
-                pushPlayer(pl
+                pushPlayer(plr)
+            end)
+            
+            yPos = yPos + 40
+        end
+    end
