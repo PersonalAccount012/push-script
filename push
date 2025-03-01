@@ -1,30 +1,31 @@
--- FE Push Script: Automatically pushes another player with force
+-- FE Push Script: Automatically selects a player and pushes them with force
 
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-local pushForce = 100  -- Adjust the push strength
-local pushCooldown = 2  -- Time between pushes (in seconds)
+local pushForce = 100  -- The strength of the push
+local pushCooldown = 2  -- Time between pushes in seconds
 
--- Function to apply a force to another player
+-- Function to apply a push force to another player
 local function pushOtherPlayer(targetPlayer)
     local targetCharacter = targetPlayer.Character
     if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
         local targetHumanoidRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+        
+        -- Create the force that will push the player
         local direction = (targetHumanoidRootPart.Position - humanoidRootPart.Position).unit
         local bodyVelocity = Instance.new("BodyVelocity")
-        
-        bodyVelocity.Velocity = direction * pushForce
-        bodyVelocity.MaxForce = Vector3.new(100000, 0, 100000)  -- Strong force, but prevents flying
+        bodyVelocity.Velocity = direction * pushForce  -- Apply force in the direction
+        bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)  -- Apply a large enough force
         bodyVelocity.Parent = targetHumanoidRootPart
-        
-        -- Remove the force after 0.2 seconds
+
+        -- Clean up the force after 0.2 seconds to prevent it from being permanent
         game:GetService("Debris"):AddItem(bodyVelocity, 0.2)
     end
 end
 
--- Function to choose a random player to push
+-- Function to choose a random player and push them
 local function chooseRandomPlayer()
     local otherPlayers = {}
     for _, otherPlayer in ipairs(game.Players:GetPlayers()) do
@@ -34,13 +35,14 @@ local function chooseRandomPlayer()
     end
 
     if #otherPlayers > 0 then
+        -- Pick a random player from the list
         local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
         pushOtherPlayer(randomPlayer)
     end
 end
 
--- Continuously push a random player every few seconds
+-- Continuously choose a random player to push
 while true do
     chooseRandomPlayer()
-    wait(pushCooldown)  -- Wait for the cooldown before pushing again
+    wait(pushCooldown)  -- Wait before pushing again
 end
