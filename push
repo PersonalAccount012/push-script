@@ -1,48 +1,69 @@
--- FE Push Script: Automatically selects a player and pushes them with force
+-- Script to be placed in a LocalScript (GUI) in StarterGui or similar
+local Player = game.Players.LocalPlayer
+local Mouse = Player:GetMouse()
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = Player.PlayerGui
 
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+-- Create a Frame for GUI
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 200, 0, 100)
+Frame.Position = UDim2.new(0, 10, 0, 10)
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.Parent = ScreenGui
 
-local pushForce = 100  -- The strength of the push
-local pushCooldown = 2  -- Time between pushes in seconds
+-- Create a TextButton to open player selection
+local PushButton = Instance.new("TextButton")
+PushButton.Size = UDim2.new(0, 180, 0, 50)
+PushButton.Position = UDim2.new(0, 10, 0, 10)
+PushButton.Text = "Select Player to Push"
+PushButton.Parent = Frame
 
--- Function to apply a push force to another player
-local function pushOtherPlayer(targetPlayer)
-    local targetCharacter = targetPlayer.Character
-    if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-        local targetHumanoidRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
-        
-        -- Create the force that will push the player
-        local direction = (targetHumanoidRootPart.Position - humanoidRootPart.Position).unit
-        local bodyVelocity = Instance.new("BodyVelocity")
-        bodyVelocity.Velocity = direction * pushForce  -- Apply force in the direction
-        bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)  -- Apply a large enough force
-        bodyVelocity.Parent = targetHumanoidRootPart
-
-        -- Clean up the force after 0.2 seconds to prevent it from being permanent
-        game:GetService("Debris"):AddItem(bodyVelocity, 0.2)
-    end
-end
-
--- Function to choose a random player and push them
-local function chooseRandomPlayer()
-    local otherPlayers = {}
-    for _, otherPlayer in ipairs(game.Players:GetPlayers()) do
-        if otherPlayer ~= player and otherPlayer.Character then
-            table.insert(otherPlayers, otherPlayer)
+-- Function to create a list of players to select
+local function createPlayerButtons()
+    -- Clear any previous buttons
+    for _, child in pairs(Frame:GetChildren()) do
+        if child:IsA("TextButton") and child ~= PushButton then
+            child:Destroy()
         end
     end
-
-    if #otherPlayers > 0 then
-        -- Pick a random player from the list
-        local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
-        pushOtherPlayer(randomPlayer)
+    
+    -- Create a button for each player
+    local yPos = 60  -- Start position for buttons
+    for _, plr in pairs(game.Players:GetPlayers()) do
+        if plr ~= Player then  -- Don't allow selecting yourself
+            local Button = Instance.new("TextButton")
+            Button.Size = UDim2.new(0, 180, 0, 30)
+            Button.Position = UDim2.new(0, 10, 0, yPos)
+            Button.Text = plr.Name
+            Button.Parent = Frame
+            
+            -- Add click event to each button
+            Button.MouseButton1Click:Connect(function()
+                -- Push the selected player
+                pushPlayer(plr)
+            end)
+            
+            yPos = yPos + 40
+        end
     end
 end
 
--- Continuously choose a random player to push
-while true do
-    chooseRandomPlayer()
-    wait(pushCooldown)  -- Wait before pushing again
+-- Function to apply a force to the selected player
+local function pushPlayer(targetPlayer)
+    local character = targetPlayer.Character
+    if character and character:FindFirstChild("Humanoid") then
+        local humanoid = character.Humanoid
+        local bodyVelocity = Instance.new("BodyVelocity")
+        
+        bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)  -- Strong enough force to push
+        bodyVelocity.Velocity = (character.PrimaryPart.Position - Player.Character.PrimaryPart.Position).unit * 50  -- Direction and force
+        
+        bodyVelocity.Parent = character.PrimaryPart
+        game.Debris:AddItem(bodyVelocity, 0.1)  -- Clean up the force after 0.1 seconds
+    end
 end
+
+-- When the button is clicked, show the player buttons
+PushButton.MouseButton1Click:Connect(function()
+    createPlayerButtons()
+end)
