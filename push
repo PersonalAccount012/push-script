@@ -1,47 +1,444 @@
--- Script to be placed in a LocalScript (GUI) in StarterGui or similar
-local Player = game.Players.LocalPlayer
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = Player.PlayerGui
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- Create a Frame for GUI
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 200, 0, 100)
-Frame.Position = UDim2.new(0, 10, 0, 10)
-Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Frame.Parent = ScreenGui
+local Window = Rayfield:CreateWindow({
+Name = "FrontEdge Hub 1.0",
+Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+LoadingTitle = "FrontEdge Hub 1.0",
+LoadingSubtitle = "Developed by JustAUserPrivate",
+Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
 
--- Create a TextButton to open player selection
-local PushButton = Instance.new("TextButton")
-PushButton.Size = UDim2.new(0, 180, 0, 50)
-PushButton.Position = UDim2.new(0, 10, 0, 10)
-PushButton.Text = "Select Player to Push"
-PushButton.Parent = Frame
+DisableRayfieldPrompts = false,
+DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
 
--- Function to create a list of players to select
-local function createPlayerButtons()
-    -- Clear any previous buttons
-    for _, child in pairs(Frame:GetChildren()) do
-        if child:IsA("TextButton") and child ~= PushButton then
-            child:Destroy()
+ConfigurationSaving = {
+Enabled = true,
+FolderName = nil, -- Create a custom folder for your hub/game
+FileName = "fehub_index.js"
+},
+
+Discord = {
+Enabled = true, -- Prompt the user to join your Discord server if their executor supports it
+Invite = "epjAuXBc", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
+RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+},
+
+KeySystem = true, -- Set this to true to use our key system
+KeySettings = {
+Title = "Key System For F-E Hub 1.0",
+Subtitle = "//Key System// In Discord Or Youtube",
+Note = "Join Server For Any Questions Provided", -- Use this to tell the user how to get a key
+FileName = "Key File", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+Key = {"https://pastebin.com/raw/qfDLM0Fx"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+}
+})
+
+local MainTab = Window:CreateTab("Starter Player", 4483362458) -- Title, Image
+local Slider = MainTab:CreateSlider({
+Name = "W-S Changer",
+Range = {0, 50},
+Increment = 1,
+Suffix = "Speed",
+CurrentValue = 16,
+Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+Callback = function(Value)
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = (Value)
+end,
+})
+
+local Slider = MainTab:CreateSlider({
+Name = "J-P Changer",
+Range = {0, 150},
+Increment = 1,
+Suffix = "Jump-Power",
+CurrentValue = 50,
+Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+Callback = function(Value)
+game.Players.LocalPlayer.Character.Humanoid.JumpPower = (Value)
+end,
+})
+
+local player = game.Players.LocalPlayer
+local camera = game.Workspace.CurrentCamera -- Get the camera
+
+-- Example UI Library Slider
+local Slider = MainTab:CreateSlider({
+Name = "FOV Slider",
+Range = {50, 120}, -- Min and Max FOV values
+Increment = 1, -- Adjust in steps of 1
+Suffix = " FOV", -- Shows 'FOV' in the slider UI
+CurrentValue = 70, -- Default FOV
+Flag = "FOV_Slider",
+Callback = function(Value)
+camera.FieldOfView = (Value) -- Set the camera FOV based on the slider
+end,
+})
+
+local GravitySlider = MainTab:CreateSlider({
+Name = "Gravity Changer",
+Range = {0, 500}, -- Adjust range as needed
+Increment = 1,
+Suffix = " Gravity",
+CurrentValue = 196, -- Default Roblox gravity
+Flag = "Slider2", -- Unique flag for saving settings
+Callback = function(Value)
+game.Workspace.Gravity = Value
+end,
+})
+
+local noclipEnabled = false -- NoClip state
+
+local NoClipButton = MainTab:CreateButton({
+Name = "Toggle NoClip",
+Callback = function()
+noclipEnabled = not noclipEnabled -- Toggle state
+
+if noclipEnabled then
+game:GetService("RunService").Stepped:Connect(function()
+if noclipEnabled and game.Players.LocalPlayer.Character then
+for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+if v:IsA("BasePart") and v.CanCollide then
+v.CanCollide = false
+end
+end
+end
+end)
+end
+end,
+})
+
+local FlyButton = MainTab:CreateButton({
+Name = "Fly GuiV3",
+Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+end,
+})
+
+MainTab:CreateButton({
+   Name = "Infinite Jump",
+   Callback = function()
+       print("Infinite Jump Activated!")
+
+       -- Toggle Infinite Jump
+       local InfiniteJumpEnabled = true
+
+       -- Detect Jump Requests
+       game:GetService("UserInputService").JumpRequest:Connect(function()
+           local player = game:GetService("Players").LocalPlayer
+           if InfiniteJumpEnabled and player.Character then
+               local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+               if humanoid then
+                   humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+               end
+           end
+       end)
+
+       -- Optional: Keybind to toggle Infinite Jump (press "J")
+       game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+           if not gameProcessed and input.KeyCode == Enum.KeyCode.J then
+               InfiniteJumpEnabled = not InfiniteJumpEnabled
+               print("Infinite Jump Toggled:", InfiniteJumpEnabled)
+           end
+       end)
+   end,
+})
+
+
+MainTab:CreateButton({
+   Name = "ShiftLock",
+   Callback = function()
+       -- Try to load and execute the script from the Pastebin link
+       local success, errorMessage = pcall(function()
+           loadstring(game:HttpGet("https://pastebin.com/raw/XE8tCfF5"))()
+       end)
+
+       -- If there was an error, print the error message
+       if not success then
+           warn("Error executing script: " .. errorMessage)
+       else
+           print("Script executed successfully!")
+       end
+   end,
+})
+
+
+local TeleportButton = MainTab:CreateButton({
+Name = "Teleport to Random Player",
+Callback = function()
+local player = game.Players.LocalPlayer
+local players = game.Players:GetPlayers()
+
+if #players > 1 then -- Ensure there are other players in the game
+local randomPlayer
+repeat
+randomPlayer = players[math.random(1, #players)]
+until randomPlayer ~= player and randomPlayer.Character and randomPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+-- Teleport local player to the random player's position
+player.Character.HumanoidRootPart.CFrame = randomPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0) -- Slightly above to avoid clipping
+end
+end,
+})
+
+local ResetButton = MainTab:CreateButton({
+Name = "Force Reset",
+Callback = function()
+local player = game.Players.LocalPlayer
+if player.Character then
+player.Character:BreakJoints() -- Instantly resets the character
+end
+end,
+})
+
+local MainTab = Window:CreateTab("🤫NSFW🤫", 4483362458) -- Title, Image
+local MainSection = MainTab:CreateSection("Scripts //Read TOS//")
+
+local Button = MainTab:CreateButton({
+Name = "Sex Script #1",
+Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/cnPthPiGon/RamDRuomFirirueieiid8didj/refs/heads/main/Fe%20sus%20hub"))()
+end,
+})
+
+
+local Button = MainTab:CreateButton({
+Name = "Jerk Off",
+Callback = function()
+loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
+end,
+})
+
+
+local Button = MainTab:CreateButton({
+Name = "Sex Animation Gui",
+Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/ShutUpJamesTheLoser/freaky/refs/heads/main/fe",true))()
+end,
+})
+
+
+local Button = MainTab:CreateButton({
+Name = "BlowJob",
+Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/ShutUpJamesTheLoser/freakyv94/refs/heads/main/freakyv94yes", true))()
+end,
+})
+
+
+local Button = MainTab:CreateButton({
+Name = "Li Code 1.3",
+Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/AlgariBot/lua/refs/heads/Lua-Script-Executor/SexMachine.lua"))()
+end,
+})
+
+
+local Button = MainTab:CreateButton({
+Name = "Face Fuck",
+Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/AKadminlol/Facefuck/refs/heads/main/CreditsbyAK"))()
+end,
+})
+
+
+local MainTab = Window:CreateTab(" 🤸🏻 Animation Gui's 🤸🏻", 4483362458) -- Title, Image
+local MainSection = MainTab:CreateSection("Scripts Are Paid Or Free")
+
+local Button = MainTab:CreateButton({
+    Name = "Disbelief Hub FE",
+    Callback = function()
+        -- Make sure to load and execute the external script safely
+        local success, result = pcall(function()
+            loadstring(game:HttpGet("https://gist.githubusercontent.com/MelonsStuff/75b93caa7fa2db08dbec1fdfe6771826/raw/7cc9bb79c766896a3c527be52a7be870a6c9e371/Disbelief.txt"))()
+        end)
+        
+        -- If an error occurs while loading the script, print it
+        if not success then
+            warn("Error loading external script: " .. result)
         end
-    end
-    
-    -- Create a button for each player
-    local yPos = 60  -- Start position for buttons
-    for _, plr in pairs(game.Players:GetPlayers()) do
-        if plr ~= Player then  -- Don't allow selecting yourself
-            local Button = Instance.new("TextButton")
-            Button.Size = UDim2.new(0, 180, 0, 30)
-            Button.Position = UDim2.new(0, 10, 0, yPos)
-            Button.Text = plr.Name
-            Button.Parent = Frame
-            
-            -- Add click event to each button
-            Button.MouseButton1Click:Connect(function()
-                -- Push the selected player
-                pushPlayer(plr)
-            end)
-            
-            yPos = yPos + 40
-        end
-    end
+    end,
+    })
+
+    local Button = MainTab:CreateButton({
+        Name = "HackerMan Hub FE", -- The name of the button that will appear in the GUI
+        Callback = function() -- When the button is clicked
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/DeBug-X0Exo-Red/HackerMan_Hub/refs/heads/main/GUI"))() -- Runs the code from the provided URL
+        end,
+    })
+
+    local Button = MainTab:CreateButton({
+      Name = "FE Sad Boy",
+      Callback = function()
+          loadstring(game:HttpGet("https://pastebin.com/raw/hgPJbwF0"))()
+      end,
+  })
+
+  MainTab:CreateButton({
+   Name = "Among Us V2",
+   Callback = function()
+      loadstring(game:HttpGet('https://rawscripts.net/raw/Nothing-Fe-Among-Us-V2-(R6)-3224'))()
+   end,
+})
+
+Rayfield:Notify({
+   Title = "WARNING",
+   Content = "These Last Animations Only Work On A Game IN Discord!",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+
+MainTab:CreateButton({
+   Name = "FE Chill",
+   Callback = function()
+      loadstring(game:HttpGet('https://rawscripts.net/raw/Just-a-baseplate.-Fe-Chill-14103'))()
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Vr Animation",
+   Callback = function()
+      loadstring(game:HttpGet('https://rawscripts.net/raw/Just-a-baseplate.-Fe-Clovr-14102'))()
+   end
+})
+
+MainTab:CreateButton({
+   Name = "FE Hug People",
+   Callback = function()
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Hug-Gui-R6-17818"))()
+      end)
+      if not success then
+         warn("Error loading script: " .. err)
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Animation GUI Emotes",
+   Callback = function()
+      loadstring(game:HttpGet("https://gist.githubusercontent.com/MelonsStuff/f018928d2f010789a150b4924e279b16/raw/8de399eb9cbccbde430fcd37270cd4ff171f8b8e/AnimationGUI.txt"))()
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "FE Booty Offender",
+   Callback = function()
+       -- Ensure this loads and executes the remote script
+       local success, errorMsg = pcall(function()
+           loadstring(game:HttpGet("https://raw.githubusercontent.com/PersonalAccount012/Bootys/refs/heads/main/Booty"))()
+       end)
+
+       -- If there was an error, print the error message
+       if not success then
+           warn("Error loading Booty script: " .. errorMsg)
+       end
+   end,
+})
+
+local MainTab = Window:CreateTab("Universal Scripts", 4483362458) -- Title, Image
+local MainSection = MainTab:CreateSection("Scripts Give You Life")
+
+MainTab:CreateButton({
+   Name = "Death Messages FE",
+   Callback = function()
+       -- Universal Death Messages Script By Orange Wood#9779/Espon
+       print("Death Messages FE Activated!")
+
+       local list = {
+           "omg.", "oof.", "sad :(", "better luck next time.", "rip.", "lol"
+       }
+
+       local list2 = {
+           " died,", " failed,", " had a heart attack mid game,", 
+           " unfortunately passed away from too much water,", 
+           " got lost and couldn't find their mama,", 
+           " needed therapy after that death,", 
+           "'s mom found their 'homework' folder,", 
+           " died, this isn't Fortnite,", 
+           " suffered a stroke,", " forgot they're not invincible,", 
+           " lived a short life but they won't be remembered,", 
+           " died a long life,", " died of fearing the dark,", 
+           " fell down the stairs,", " couldn't get to the bathroom in time,", 
+           " tried to fly,", " forgot how to play,", 
+           " forgot how to breathe,", " choked,", " tripped on air,"
+       }
+
+       -- Function to send a death message
+       local function onPlayerDeath(player)
+           if player then
+               local reaction = list[math.random(1, #list)]
+               local reason = list2[math.random(1, #list2)]
+               local message = player.Name .. reason .. " " .. reaction
+
+               -- Display message in chat
+               game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+                   Text = message,
+                   Color = Color3.fromRGB(255, 0, 0),
+                   Font = Enum.Font.SourceSansBold,
+                   FontSize = Enum.FontSize.Size24
+               })
+
+               -- Log the message
+               print(message)
+
+               -- Send message to global chat
+               local args = {
+                   [1] = message,
+                   [2] = "All"
+               }
+               game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(unpack(args))   
+           end
+       end
+
+       -- Setup event listener for all players
+       local function setupPlayer(player)
+           player.CharacterAdded:Connect(function(character)
+               local humanoid = character:FindFirstChildOfClass("Humanoid")
+               if humanoid then
+                   humanoid.Died:Connect(function()
+                       onPlayerDeath(player)
+                   end)
+               end
+           end)
+
+           player.CharacterRemoving:Connect(function()
+               local selectedName = math.random(1, 2) == 1 and player.Name or player.DisplayName
+               local args = {
+                   [1] = selectedName .. list2[math.random(1, #list2)] .. " " .. list[math.random(1, #list)],
+                   [2] = "All"
+               }
+               game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(unpack(args))   
+           end)
+       end
+
+       -- Apply to current players
+       for _, player in pairs(game.Players:GetPlayers()) do
+           setupPlayer(player)
+       end
+
+       -- Apply to future players
+       game.Players.PlayerAdded:Connect(setupPlayer)
+
+       print("Death Messages Enabled.")
+   end
+})
+
+MainTab:CreateButton({
+   Name = "Chat Hacks Chinese FE",
+   Callback = function()
+      -- Execute the chat hacks script from the URL
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/PersonalAccount012/chat-hacks/refs/heads/main/chat%20hacks%20fe"))()
+      end)
+      
+      -- Error handling
+      if not success then
+         warn("Failed to load script: " .. err)
+      else
+         print("Chat Hacks script loaded successfully!")
+      end
+   end,
+})
+
+
